@@ -11,6 +11,7 @@
 package org.eclipse.che.plugin.svn.server;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.eclipse.che.api.fs.server.WsPathUtils.resolve;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +21,6 @@ import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.config.ProjectConfig;
 import org.eclipse.che.api.fs.server.FsManager;
-import org.eclipse.che.api.fs.server.FsPaths;
 import org.eclipse.che.api.project.server.type.ReadonlyValueProvider;
 import org.eclipse.che.api.project.server.type.ValueProvider;
 import org.eclipse.che.api.project.server.type.ValueProviderFactory;
@@ -38,14 +38,11 @@ public class SubversionValueProviderFactory implements ValueProviderFactory {
   private static final Logger LOG = LoggerFactory.getLogger(SubversionValueProviderFactory.class);
 
   private final SubversionApi subversionApi;
-  private final FsPaths fsPaths;
   private final FsManager fsManager;
 
   @Inject
-  public SubversionValueProviderFactory(
-      SubversionApi subversionApi, FsPaths fsPaths, FsManager fsManager) {
+  public SubversionValueProviderFactory(SubversionApi subversionApi, FsManager fsManager) {
     this.subversionApi = subversionApi;
-    this.fsPaths = fsPaths;
     this.fsManager = fsManager;
   }
 
@@ -97,8 +94,8 @@ public class SubversionValueProviderFactory implements ValueProviderFactory {
 
   private boolean isSvn(String projectWsPath) throws ForbiddenException, ServerException {
     LOG.debug("Searching for '.svn' in {}.", projectWsPath);
-    String svnDirectoryWsPath = fsPaths.resolve(projectWsPath, ".svn");
-    if (fsManager.existsAsDirectory(svnDirectoryWsPath)) {
+    String svnDirectoryWsPath = resolve(projectWsPath, ".svn");
+    if (fsManager.existsAsDir(svnDirectoryWsPath)) {
       LOG.debug("Found it.");
       return true;
     } else {

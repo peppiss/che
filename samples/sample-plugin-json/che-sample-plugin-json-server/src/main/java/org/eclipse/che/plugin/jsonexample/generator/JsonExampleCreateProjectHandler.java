@@ -10,6 +10,7 @@
  */
 package org.eclipse.che.plugin.jsonexample.generator;
 
+import static org.eclipse.che.api.fs.server.WsPathUtils.resolve;
 import static org.eclipse.che.plugin.jsonexample.shared.Constants.JSON_EXAMPLE_PROJECT_TYPE_ID;
 
 import java.io.IOException;
@@ -21,7 +22,6 @@ import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.fs.server.FsManager;
-import org.eclipse.che.api.fs.server.FsPaths;
 import org.eclipse.che.api.project.server.handlers.CreateProjectHandler;
 import org.eclipse.che.api.project.server.type.AttributeValue;
 
@@ -32,12 +32,10 @@ import org.eclipse.che.api.project.server.type.AttributeValue;
 public class JsonExampleCreateProjectHandler implements CreateProjectHandler {
 
   private final FsManager fsManager;
-  private final FsPaths fsPaths;
 
   @Inject
-  public JsonExampleCreateProjectHandler(FsManager fsManager, FsPaths fsPaths) {
+  public JsonExampleCreateProjectHandler(FsManager fsManager) {
     this.fsManager = fsManager;
-    this.fsPaths = fsPaths;
   }
 
   @Override
@@ -50,13 +48,13 @@ public class JsonExampleCreateProjectHandler implements CreateProjectHandler {
         InputStream personJsonContent =
             getClass().getClassLoader().getResourceAsStream("files/default_person")) {
 
-      String packageJsonWsPath = fsPaths.resolve(projectWsPath, "package.json");
+      String packageJsonWsPath = resolve(projectWsPath, "package.json");
       fsManager.createFile(packageJsonWsPath, packageJsonContent);
 
-      String myJsonFilesWsPath = fsPaths.resolve(projectWsPath, "myJsonFiles");
-      fsManager.createDirectory(myJsonFilesWsPath);
+      String myJsonFilesWsPath = resolve(projectWsPath, "myJsonFiles");
+      fsManager.createDir(myJsonFilesWsPath);
 
-      String personJsonWsPath = fsPaths.resolve(myJsonFilesWsPath, "myJsonFiles");
+      String personJsonWsPath = resolve(myJsonFilesWsPath, "myJsonFiles");
       fsManager.createFile(personJsonWsPath, personJsonContent);
 
     } catch (IOException ioEx) {

@@ -72,7 +72,7 @@ public class SubversionProjectImporter implements ProjectImporter {
       supplier = () -> LineConsumer.DEV_NULL;
     }
 
-    if (!fsManager.isDirectory(dst)) {
+    if (!fsManager.isDir(dst)) {
       throw new IOException("Project cannot be imported into \"" + dst + "\". It is not a folder.");
     }
 

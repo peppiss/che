@@ -10,12 +10,13 @@
  */
 package org.eclipse.che.plugin.svn.server.rest;
 
+import static org.eclipse.che.api.fs.server.WsPathUtils.absolutize;
+
 import java.io.IOException;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -29,9 +30,8 @@ import org.eclipse.che.api.core.ApiException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.api.fs.server.FsManager;
-import org.eclipse.che.api.fs.server.FsPaths;
+import org.eclipse.che.api.fs.server.WsPathUtils;
 import org.eclipse.che.api.project.server.ProjectManager;
-import org.eclipse.che.api.project.server.impl.RegisteredProject;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.plugin.svn.server.SubversionApi;
@@ -70,8 +70,6 @@ import org.eclipse.che.plugin.svn.shared.UpdateRequest;
 public class SubversionService extends Service {
 
   @Inject private ProjectManager projectManager;
-
-  @Inject private FsPaths fsPaths;
 
   @Inject private FsManager fsManager;
 
@@ -485,14 +483,10 @@ public class SubversionService extends Service {
   public SourceStorageDto importDescriptor(
       @Context UriInfo uriInfo, @QueryParam("projectPath") String projectPath)
       throws ApiException, IOException {
-    String projectWsPath = fsPaths.absolutize(projectPath);
-    final RegisteredProject project =
-        projectManager
-            .get(projectWsPath)
-            .orElseThrow(() -> new NotFoundException("Can't find a project: " + projectPath));
-    String dotSvnWsPath = fsPaths.resolve(projectWsPath, ".svn");
+    String projectWsPath = absolutize(projectPath);
+    String dotSvnWsPath = WsPathUtils.resolve(projectWsPath, ".svn");
 
-    if (fsManager.existsAsDirectory(dotSvnWsPath)) {
+    if (fsManager.existsAsDir(dotSvnWsPath)) {
       return DtoFactory.getInstance()
           .createDto(SourceStorageDto.class)
           .withType("subversion")
