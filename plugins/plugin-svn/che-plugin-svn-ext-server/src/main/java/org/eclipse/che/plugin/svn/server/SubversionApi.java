@@ -1034,7 +1034,6 @@ public class SubversionApi {
     final List<String> lines = new ArrayList<>();
     final CommandLineResult result;
     final StringBuffer buffer;
-    boolean isWarning = false;
 
     // Add paths to the end of the list of arguments
     for (final String path : paths) {
@@ -1081,10 +1080,11 @@ public class SubversionApi {
       lines.addAll(result.getStdout());
       lines.addAll(result.getStderr());
 
+      // Subversion returns an error code of 1 even when the "error" is just a warning
+      boolean isWarning = true;
       for (final String line : lines) {
-        // Subversion returns an error code of 1 even when the "error" is just a warning
-        if (line.startsWith("svn: warning: ")) {
-          isWarning = true;
+        if (!line.startsWith("svn: warning: ")) {
+          isWarning = false;
         }
 
         buffer.append(line);

@@ -15,6 +15,7 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.function.Supplier;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
@@ -24,6 +25,7 @@ import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.core.model.workspace.config.SourceStorage;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.fs.server.FsManager;
+import org.eclipse.che.api.fs.server.PathTransformer;
 import org.eclipse.che.api.project.server.ProjectImporter;
 import org.eclipse.che.plugin.svn.shared.CheckoutRequest;
 
@@ -35,11 +37,14 @@ public class SubversionProjectImporter implements ProjectImporter {
 
   private final SubversionApi subversionApi;
   private final FsManager fsManager;
+  private final PathTransformer pathTransformer;
 
   @Inject
-  public SubversionProjectImporter(final SubversionApi subversionApi, FsManager fsManager) {
+  public SubversionProjectImporter(final SubversionApi subversionApi, FsManager fsManager,
+      PathTransformer pathTransformer) {
     this.subversionApi = subversionApi;
     this.fsManager = fsManager;
+    this.pathTransformer = pathTransformer;
   }
 
   @Override
@@ -61,26 +66,21 @@ public class SubversionProjectImporter implements ProjectImporter {
   public void doImport(SourceStorage src, String dst)
       throws ForbiddenException, ConflictException, UnauthorizedException, IOException,
           ServerException, NotFoundException {
-    doImport(src, dst, null);
+    doImport(src, dst, () -> LineConsumer.DEV_NULL);
   }
 
   @Override
   public void doImport(SourceStorage src, String dst, Supplier<LineConsumer> supplier)
       throws ForbiddenException, ConflictException, UnauthorizedException, IOException,
           ServerException, NotFoundException {
-    if (supplier == null) {
-      supplier = () -> LineConsumer.DEV_NULL;
-    }
-
-    if (!fsManager.isDir(dst)) {
+    if (!fsManager.existsAsDir(dst)) {
       throw new IOException("Project cannot be imported into \"" + dst + "\". It is not a folder.");
     }
 
     this.subversionApi.setOutputLineConsumerFactory(supplier::get);
     subversionApi.checkout(
         newDto(CheckoutRequest.class)
-            // TODO wtf?
-            .withProjectPath("/projects" + dst)
+            .withProjectPath(pathTransformer.transform(dst).toString())
             .withUrl(src.getLocation())
             .withUsername(src.getParameters().remove("username"))
             .withPassword(src.getParameters().remove("password")));

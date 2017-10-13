@@ -11,7 +11,7 @@
 package org.eclipse.che.plugin.jsonexample;
 
 import static org.eclipse.che.api.fs.server.WsPathUtils.absolutize;
-import static org.eclipse.che.api.fs.server.WsPathUtils.getName;
+import static org.eclipse.che.api.fs.server.WsPathUtils.nameOf;
 
 import com.google.inject.Inject;
 import java.util.LinkedHashMap;
@@ -49,7 +49,7 @@ public class JsonLocService {
   }
 
   private boolean isJsonFile(String fileWsPath) {
-    return getName(fileWsPath).endsWith("json");
+    return nameOf(fileWsPath).endsWith("json");
   }
 
   /**
@@ -71,7 +71,7 @@ public class JsonLocService {
     Set<String> fileWsPaths = fsManager.getFileWsPaths(projectWsPath);
     for (String fileWsPath : fileWsPaths) {
       if (isJsonFile(fileWsPath)) {
-        String name = getName(fileWsPath);
+        String name = nameOf(fileWsPath);
         linesPerFile.put(name, Integer.toString(countLines(fileWsPath)));
       }
     }
